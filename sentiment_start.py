@@ -13,12 +13,13 @@ import torch.nn as nn
 import numpy as np
 import loader as ld
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 batch_size = 32
 output_size = 2
 hidden_size = 64        # to experiment with
 
-run_recurrent = False    # else run Token-wise MLP
+run_recurrent = True    # else run Token-wise MLP
 use_RNN = True          # otherwise GRU
 atten_size = 0          # atten > 0 means using restricted self atten
 
@@ -60,19 +61,27 @@ class ExRNN(nn.Module):
 
         # RNN Cell weights
         self.in2hidden = nn.Linear(input_size + hidden_size, hidden_size)
-        # what else?
+        self.hidden2out = nn.Linear(hidden_size, output_size)
 
     def name(self):
         return "RNN"
 
     def forward(self, x, hidden_state):
+        batch_size, seq_len = x.size()
 
-        # Implementation of RNN cell
+        for t in range(seq_len):
+            print(seq_len)
+            print(x[:, t].size())
+            print(hidden_state.size())
+            combined = torch.cat((x[:, t], hidden_state), 1)
+            hidden_state = torch.tanh(self.in2hidden(combined))
+
+        output = self.hidden2out(hidden_state)
         
-        return output, hidden
+        return output, hidden_state
 
     def init_hidden(self, bs):
-        return torch.zeros(bs, self.hidden_size)
+        return torch.zeros(bs, self.hidden_size).to(device)
 
 # Implements GRU Unit
 
@@ -80,23 +89,40 @@ class ExGRU(nn.Module):
     def __init__(self, input_size, output_size, hidden_size):
         super(ExGRU, self).__init__()
         self.hidden_size = hidden_size
+
         # GRU Cell weights
-        # self.something =
-        # etc ...
+        self.W_z = nn.Linear(input_size + hidden_size, hidden_size)  # Update gate
+        self.W_r = nn.Linear(input_size + hidden_size, hidden_size)  # Reset gate
+        self.W = nn.Linear(input_size + hidden_size, hidden_size)  # Current memory content
+
+        # Output layer
+        self.fc = nn.Linear(hidden_size, output_size)
 
     def name(self):
         return "GRU"
 
     def forward(self, x, hidden_state):
+        bs, seq_len, _ = x.size()
+        hidden = hidden_state
 
-        # Implementation of GRU cell
+        for t in range(seq_len):
+            x_t = x[:, t, :]
+            combined = torch.cat((x_t, hidden), 1)
 
-        # missing implementation
+            z_t = torch.sigmoid(self.W_z(combined))  # Update gate
+            r_t = torch.sigmoid(self.W_r(combined))  # Reset gate
+
+            combined_r = torch.cat((x_t, r_t * hidden), 1)
+            h_tilde_t = torch.tanh(self.W(combined_r))  # Candidate hidden state
+
+            hidden = (1 - z_t) * hidden + z_t * h_tilde_t  # Final hidden state
+
+        output = self.fc(hidden)
 
         return output, hidden
 
-    def init_hidden(self):
-        return torch.zeros(bs, self.hidden_size)
+    def init_hidden(self, bs):
+        return torch.zeros(bs, self.hidden_size).to(device)
 
 
 class ExMLP(nn.Module):
@@ -124,7 +150,7 @@ class ExMLP(nn.Module):
         return x
 
 
-class ExLRestSelfAtten(nn.Module):
+class ExRestSelfAtten(nn.Module):
     def __init__(self, input_size, output_size, hidden_size):
         super(ExRestSelfAtten, self).__init__()
 
@@ -181,99 +207,100 @@ class ExLRestSelfAtten(nn.Module):
 def print_review(rev_text, sbs1, sbs2, lbl1, lbl2):
             
     # implement
+    pass
 
 # select model to use
-
-if run_recurrent:
-    if use_RNN:
-        model = ExRNN(input_size, output_size, hidden_size)
-    else:
-        model = ExGRU(input_size, output_size, hidden_size)
-else:
-    if atten_size > 0:
-        model = ExRestSelfAtten(input_size, output_size, hidden_size)
-    else:
-        model = ExMLP(input_size, output_size, hidden_size)
-
-print("Using model: " + model.name())
-
-if reload_model:
-    print("Reloading model")
-    model.load_state_dict(torch.load(model.name() + ".pth"))
-
-criterion = nn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-
-train_loss = 1.0
-test_loss = 1.0
-
-# training steps in which a test step is executed every test_interval
-
-for epoch in range(num_epochs):
-
-    itr = 0 # iteration counter within each epoch
-
-    for labels, reviews, reviews_text in train_dataset:   # getting training batches
-
-        itr = itr + 1
-
-        if (itr + 1) % test_interval == 0:
-            test_iter = True
-            labels, reviews, reviews_text = next(iter(test_dataset)) # get a test batch 
+if __name__ == '__main__':
+    if run_recurrent:
+        if use_RNN:
+            model = ExRNN(input_size, output_size, hidden_size)
         else:
-            test_iter = False
-
-        # Recurrent nets (RNN/GRU)
-
-        if run_recurrent:
-            hidden_state = model.init_hidden(int(labels.shape[0]))
-
-            for i in range(num_words):
-                output, hidden_state = model(reviews[:,i,:], hidden_state)  # HIDE
-
-        else:  
-
-        # Token-wise networks (MLP / MLP + Atten.) 
-        
-            sub_score = []
-            if atten_size > 0:  
-                # MLP + atten
-                sub_score, atten_weights = model(reviews)
-            else:               
-                # MLP
-                sub_score = model(reviews)
-
-            output = torch.mean(sub_score, 1)
-            
-        # cross-entropy loss
-
-        loss = criterion(output, labels)
-
-        # optimize in training iterations
-
-        if not test_iter:
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-
-        # averaged losses
-        if test_iter:
-            test_loss = 0.8 * float(loss.detach()) + 0.2 * test_loss
+            model = ExGRU(input_size, output_size, hidden_size)
+    else:
+        if atten_size > 0:
+            model = ExRestSelfAtten(input_size, output_size, hidden_size)
         else:
-            train_loss = 0.9 * float(loss.detach()) + 0.1 * train_loss
+            model = ExMLP(input_size, output_size, hidden_size)
 
-        if test_iter:
-            print(
-                f"Epoch [{epoch + 1}/{num_epochs}], "
-                f"Step [{itr + 1}/{len(train_dataset)}], "
-                f"Train Loss: {train_loss:.4f}, "
-                f"Test Loss: {test_loss:.4f}"
-            )
+    print("Using model: " + model.name())
 
-            if not run_recurrent:
-                nump_subs = sub_score.detach().numpy()
-                labels = labels.detach().numpy()
-                print_review(reviews_text[0], nump_subs[0,:,0], nump_subs[0,:,1], labels[0,0], labels[0,1])
+    if reload_model:
+        print("Reloading model")
+        model.load_state_dict(torch.load(model.name() + ".pth"))
 
-            # saving the model
-            torch.save(model, model.name() + ".pth")
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+    train_loss = 1.0
+    test_loss = 1.0
+
+    # training steps in which a test step is executed every test_interval
+
+    for epoch in range(num_epochs):
+
+        itr = 0 # iteration counter within each epoch
+
+        for labels, reviews, reviews_text in train_dataset:   # getting training batches
+
+            itr = itr + 1
+
+            if (itr + 1) % test_interval == 0:
+                test_iter = True
+                labels, reviews, reviews_text = next(iter(test_dataset)) # get a test batch
+            else:
+                test_iter = False
+
+            # Recurrent nets (RNN/GRU)
+
+            if run_recurrent:
+                hidden_state = model.init_hidden(int(labels.shape[0]))
+
+                for i in range(num_words):
+                    output, hidden_state = model(reviews[:,i,:], hidden_state)  # HIDE
+
+            else:
+
+            # Token-wise networks (MLP / MLP + Atten.)
+
+                sub_score = []
+                if atten_size > 0:
+                    # MLP + atten
+                    sub_score, atten_weights = model(reviews)
+                else:
+                    # MLP
+                    sub_score = model(reviews)
+
+                output = torch.mean(sub_score, 1)
+
+            # cross-entropy loss
+
+            loss = criterion(output, labels)
+
+            # optimize in training iterations
+
+            if not test_iter:
+                optimizer.zero_grad()
+                loss.backward()
+                optimizer.step()
+
+            # averaged losses
+            if test_iter:
+                test_loss = 0.8 * float(loss.detach()) + 0.2 * test_loss
+            else:
+                train_loss = 0.9 * float(loss.detach()) + 0.1 * train_loss
+
+            if test_iter:
+                print(
+                    f"Epoch [{epoch + 1}/{num_epochs}], "
+                    f"Step [{itr + 1}/{len(train_dataset)}], "
+                    f"Train Loss: {train_loss:.4f}, "
+                    f"Test Loss: {test_loss:.4f}"
+                )
+
+                if not run_recurrent:
+                    nump_subs = sub_score.detach().numpy()
+                    labels = labels.detach().numpy()
+                    print_review(reviews_text[0], nump_subs[0,:,0], nump_subs[0,:,1], labels[0,0], labels[0,1])
+
+                # saving the model
+                torch.save(model, model.name() + ".pth")

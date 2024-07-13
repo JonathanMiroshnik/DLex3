@@ -1,5 +1,5 @@
 import torch
-from torchtext.legacy.data import Field
+#from torchtext.legacy.data import Field
 import torchtext as tx
 from torchtext.vocab import GloVe
 from torchtext.datasets import IMDB
