@@ -21,9 +21,9 @@ device = torch.device("cpu")
 
 batch_size = 32
 output_size = 2
-hidden_size = 64        # to experiment with
+hidden_size = 128        # to experiment with
 
-run_recurrent = True    # else run Token-wise MLP
+run_recurrent = False    # else run Token-wise MLP
 use_RNN = True          # otherwise GRU
 atten_size = 0          # atten > 0 means using restricted self atten
 
@@ -116,9 +116,14 @@ class ExMLP(nn.Module):
 
         self.ReLU = torch.nn.ReLU()
 
+        self.intermediate_size = 32;
+
         # Token-wise MLP network weights
         self.layer1 = MatMul(input_size,hidden_size)
         # additional layer(s)
+        self.layer2 = MatMul(hidden_size, self.intermediate_size)
+
+        self.layer3 = MatMul(self.intermediate_size, output_size)
         
 
     def name(self):
@@ -128,9 +133,10 @@ class ExMLP(nn.Module):
 
         # Token-wise MLP network implementation
         
-        x = self.layer1(x)
-        x = self.ReLU(x)
+        x = torch.relu(self.layer1(x))
         # rest
+        x = torch.relu(self.layer2(x))
+        x = torch.relu(self.layer3(x))
 
         return x
 
