@@ -9,8 +9,8 @@ from torch.utils.data import DataLoader
 from torchtext.data.functional import to_map_style_dataset
 import pandas as pd
 
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+pre = "cuda" if torch.cuda.is_available() else "cpu"
+device = torch.device("cpu")
 
 MAX_LENGTH = 100
 embedding_size = 100

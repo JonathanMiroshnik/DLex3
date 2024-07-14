@@ -13,18 +13,22 @@ import torch.nn as nn
 import numpy as np
 import loader as ld
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+import matplotlib.pyplot as plt
+plot_graphs = True
+
+pre = "cuda" if torch.cuda.is_available() else "cpu"
+device = torch.device("cpu")
 
 batch_size = 32
 output_size = 2
 hidden_size = 64        # to experiment with
 
 run_recurrent = True    # else run Token-wise MLP
-use_RNN = False          # otherwise GRU
+use_RNN = True          # otherwise GRU
 atten_size = 0          # atten > 0 means using restricted self atten
 
 reload_model = False
-num_epochs = 10
+num_epochs = 4
 learning_rate = 0.001
 test_interval = 50
 
@@ -215,6 +219,9 @@ if __name__ == '__main__':
     train_loss = 1.0
     test_loss = 1.0
 
+    train_losses = list()
+    test_losses = list()
+
     # training steps in which a test step is executed every test_interval
 
     for epoch in range(num_epochs):
@@ -271,6 +278,9 @@ if __name__ == '__main__':
                 train_loss = 0.9 * float(loss.detach()) + 0.1 * train_loss
 
             if test_iter:
+                train_losses.append(train_loss)
+                test_losses.append(test_loss)
+
                 print(
                     f"Epoch [{epoch + 1}/{num_epochs}], "
                     f"Step [{itr + 1}/{len(train_dataset)}], "
@@ -285,3 +295,20 @@ if __name__ == '__main__':
 
                 # saving the model
                 torch.save(model, model.name() + ".pth")
+
+    if plot_graphs:
+        epochs = list(range(1, len(train_losses) + 1))
+        # plt.figure(figsize=(10, 6))  # specify figure size
+
+        plt.plot(epochs, train_losses, label='Train Loss')
+        plt.plot(epochs, test_losses, label='Test Loss')
+
+        plt.title('Training and Test Loss over Epochs')
+        plt.xlabel('Epoch')
+        plt.ylabel('Loss')
+        plt.legend()
+
+        plt.grid(True)
+        plt.tight_layout()
+
+        plt.show()
