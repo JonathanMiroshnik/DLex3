@@ -20,7 +20,7 @@ output_size = 2
 hidden_size = 64        # to experiment with
 
 run_recurrent = True    # else run Token-wise MLP
-use_RNN = True          # otherwise GRU
+use_RNN = False          # otherwise GRU
 atten_size = 0          # atten > 0 means using restricted self atten
 
 reload_model = False
@@ -67,16 +67,8 @@ class ExRNN(nn.Module):
         return "RNN"
 
     def forward(self, x, hidden_state):
-        batch_size, seq_len = x.size()
-
-        for t in range(seq_len):
-            print(seq_len)
-            print(x[:, t].size())
-            print(hidden_state.size())
-            combined = torch.cat((x[:, t], hidden_state), 1)
-            hidden_state = torch.tanh(self.in2hidden(combined))
-
-        output = self.hidden2out(hidden_state)
+        hidden = self.sigmoid(self.in2hidden(torch.cat((x, hidden_state), dim=1)))
+        output = self.sigmoid(self.hidden2out(hidden))
         
         return output, hidden_state
 
@@ -102,22 +94,11 @@ class ExGRU(nn.Module):
         return "GRU"
 
     def forward(self, x, hidden_state):
-        bs, seq_len, _ = x.size()
-        hidden = hidden_state
-
-        for t in range(seq_len):
-            x_t = x[:, t, :]
-            combined = torch.cat((x_t, hidden), 1)
-
-            z_t = torch.sigmoid(self.W_z(combined))  # Update gate
-            r_t = torch.sigmoid(self.W_r(combined))  # Reset gate
-
-            combined_r = torch.cat((x_t, r_t * hidden), 1)
-            h_tilde_t = torch.tanh(self.W(combined_r))  # Candidate hidden state
-
-            hidden = (1 - z_t) * hidden + z_t * h_tilde_t  # Final hidden state
-
-        output = self.fc(hidden)
+        z_t = torch.sigmoid(self.W_z(torch.cat((x, hidden_state), dim=1)))
+        r_t = torch.sigmoid(self.W_r(torch.cat((x, hidden_state), dim=1)))
+        h_tilde_t = torch.tanh(self.W(torch.cat((x, r_t * hidden_state), dim=1)))
+        hidden = (1-z_t) * hidden_state + z_t * h_tilde_t
+        output = torch.sigmoid(self.fc(hidden))
 
         return output, hidden
 
