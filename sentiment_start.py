@@ -24,8 +24,8 @@ output_size = 2
 hidden_size = 128        # to experiment with
 
 run_recurrent = True    # else run Token-wise MLP
-use_RNN = True          # otherwise GRU
-atten_size = 2          # atten > 0 means using restricted self atten
+use_RNN = False          # otherwise GRU
+atten_size = 0          # atten > 0 means using restricted self atten
 
 reload_model = False
 num_epochs = 4
@@ -249,6 +249,8 @@ if __name__ == '__main__':
 
     train_losses = list()
     test_losses = list()
+    train_accuracies = list()
+    test_accuracies = list()
 
     # training steps in which a test step is executed every test_interval
 
@@ -306,23 +308,22 @@ if __name__ == '__main__':
                 train_loss = 0.9 * float(loss.detach()) + 0.1 * train_loss
 
             if test_iter:
-                print("REVIEW:")
-                print(reviews[:, i, :])
-                print("LABEL:")
-                print(labels)
-                print("OUTPUT:")
-                print(output)
-                print("ROUNDED OUTPUT:")
+                # print("REVIEW:")
+                # print(reviews[:, i, :])
+                # print("LABEL:")
+                # print(labels)
+                # print("OUTPUT:")
+                # print(output)
+                # print("ROUNDED OUTPUT:")
                 rounded_output = (output == output.max(dim=1, keepdim=True).values).float()
-                print(rounded_output)
-                print("OUTPUT ACCURACY:")
-                # Compare the tensors element-wise
+                # print(rounded_output)
+                # print("OUTPUT ACCURACY:")
                 comparison = (rounded_output == labels)
-                # To find rows that agree entirely, we need to check if all elements in each row are equal
                 rows_agree = comparison.all(dim=1)
-                # Count the number of rows that agree
                 num_rows_agree = rows_agree.sum().item()
-                print(num_rows_agree / len(labels))
+
+                # train_accuracies.append()
+                test_accuracies.append(num_rows_agree / len(labels))
 
                 train_losses.append(train_loss)
                 test_losses.append(test_loss)
@@ -344,7 +345,7 @@ if __name__ == '__main__':
 
     if plot_graphs:
         epochs = list(range(1, len(train_losses) + 1))
-        # plt.figure(figsize=(10, 6))  # specify figure size
+        plt.figure(figsize=(10, 6))  # specify figure size
 
         plt.plot(epochs, train_losses, label='Train Loss')
         plt.plot(epochs, test_losses, label='Test Loss')
@@ -352,6 +353,18 @@ if __name__ == '__main__':
         plt.title('Training and Test Loss over Epochs')
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
+        plt.legend()
+
+        plt.grid(True)
+        plt.tight_layout()
+
+        plt.show()
+
+        plt.figure(figsize=(10, 6))  # specify figure size
+        plt.plot(epochs, test_accuracies, label='Test Accuracy')
+        plt.title('Test Accuracy over Epochs')
+        plt.xlabel('Epoch')
+        plt.ylabel('Test Accuracy')
         plt.legend()
 
         plt.grid(True)
