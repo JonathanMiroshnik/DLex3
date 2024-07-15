@@ -25,7 +25,7 @@ hidden_size = 128        # to experiment with
 
 run_recurrent = False    # else run Token-wise MLP
 use_RNN = True          # otherwise GRU
-atten_size = 0          # atten > 0 means using restricted self atten
+atten_size = 2          # atten > 0 means using restricted self atten
 
 reload_model = False
 num_epochs = 4
@@ -155,18 +155,35 @@ class ExRestSelfAtten(nn.Module):
 
         self.layer1 = MatMul(input_size,hidden_size)
         self.W_q = MatMul(hidden_size, hidden_size, use_bias=False)
-        # rest ...
+        self.W_k = MatMul(hidden_size, hidden_size, use_bias=False)
+        self.W_v = MatMul(hidden_size, hidden_size, use_bias=False)
+        self.W_o = MatMul(hidden_size, output_size)
 
+        # Positional Encoding
+        self.positional_encoding = self.create_positional_encoding(hidden_size, 100)
+
+    def create_positional_encoding(self, hidden_size, max_len):
+        pe = torch.zeros(max_len, hidden_size)
+        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
+        div_term = torch.exp(torch.arange(0, hidden_size, 2).float() * (-np.log(10000.0) / hidden_size))
+        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 1::2] = torch.cos(position * div_term)
+        pe = pe.unsqueeze(0)
+        return nn.Parameter(pe, requires_grad=False)
 
     def name(self):
         return "MLP_atten"
 
     def forward(self, x):
+        batch_size, seq_len, _ = x.size()
 
         # Token-wise MLP + Restricted Attention network implementation
 
         x = self.layer1(x)
         x = self.ReLU(x)
+
+        # Add positional encoding
+        x = x + self.positional_encoding[:, :seq_len, :]
 
         # generating x in offsets between -atten_size and atten_size 
         # with zero padding at the ends
@@ -184,12 +201,17 @@ class ExRestSelfAtten(nn.Module):
 
         # Applying attention layer
 
-        # query = ...
-        # keys = ...
-        # vals = ...
+        query = self.W_q(x).unsqueeze(2)
+        keys = self.W_k(x_nei)
+        vals = self.W_v(x_nei)
 
+        attention_scores = torch.matmul(query, keys.transpose(-2, -1)) / self.sqrt_hidden_size
+        atten_weights = self.softmax(attention_scores)
+        context = torch.matmul(atten_weights, vals).squeeze(2)
 
-        return x, atten_weights
+        output = self.W_o(context)
+
+        return output, atten_weights
 
 
 # prints portion of the review (20-30 first words), with the sub-scores each work obtained
