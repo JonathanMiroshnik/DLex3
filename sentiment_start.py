@@ -24,7 +24,7 @@ output_size = 2
 hidden_size = 128        # to experiment with
 
 run_recurrent = True    # else run Token-wise MLP
-use_RNN = False          # otherwise GRU
+use_RNN = True          # otherwise GRU
 atten_size = 0          # atten > 0 means using restricted self atten
 
 reload_model = False
@@ -323,7 +323,9 @@ if __name__ == '__main__':
                 num_rows_agree = rows_agree.sum().item()
 
                 # train_accuracies.append()
-                test_accuracies.append(num_rows_agree / len(labels))
+
+                test_accuracy = num_rows_agree / len(labels)
+                test_accuracies.append(test_accuracy)
 
                 train_losses.append(train_loss)
                 test_losses.append(test_loss)
@@ -333,6 +335,7 @@ if __name__ == '__main__':
                     f"Step [{itr + 1}/{len(train_dataset)}], "
                     f"Train Loss: {train_loss:.4f}, "
                     f"Test Loss: {test_loss:.4f}"
+                    f"Test Accuracy: {test_accuracy:.4f}"
                 )
 
                 if not run_recurrent:
