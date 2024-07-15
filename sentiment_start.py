@@ -23,7 +23,7 @@ batch_size = 32
 output_size = 2
 hidden_size = 128        # to experiment with
 
-run_recurrent = False    # else run Token-wise MLP
+run_recurrent = True    # else run Token-wise MLP
 use_RNN = True          # otherwise GRU
 atten_size = 2          # atten > 0 means using restricted self atten
 
@@ -306,6 +306,24 @@ if __name__ == '__main__':
                 train_loss = 0.9 * float(loss.detach()) + 0.1 * train_loss
 
             if test_iter:
+                print("REVIEW:")
+                print(reviews[:, i, :])
+                print("LABEL:")
+                print(labels)
+                print("OUTPUT:")
+                print(output)
+                print("ROUNDED OUTPUT:")
+                rounded_output = (output == output.max(dim=1, keepdim=True).values).float()
+                print(rounded_output)
+                print("OUTPUT ACCURACY:")
+                # Compare the tensors element-wise
+                comparison = (rounded_output == labels)
+                # To find rows that agree entirely, we need to check if all elements in each row are equal
+                rows_agree = comparison.all(dim=1)
+                # Count the number of rows that agree
+                num_rows_agree = rows_agree.sum().item()
+                print(num_rows_agree / len(labels))
+
                 train_losses.append(train_loss)
                 test_losses.append(test_loss)
 
