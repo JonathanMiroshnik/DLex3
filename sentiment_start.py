@@ -23,9 +23,9 @@ batch_size = 32
 output_size = 2
 hidden_size = 128        # to experiment with
 
-run_recurrent = True    # else run Token-wise MLP
+run_recurrent = False    # else run Token-wise MLP
 use_RNN = True          # otherwise GRU
-atten_size = 0          # atten > 0 means using restricted self atten
+atten_size = 2          # atten > 0 means using restricted self atten
 
 reload_model = False
 num_epochs = 4
@@ -222,6 +222,22 @@ def print_review(rev_text, sbs1, sbs2, lbl1, lbl2):
     # implement
     pass
 
+
+def print_review_words_MLP(reviews, reviews_text):
+    model2 = torch.load("MLP.pth")
+    y = model2(reviews).tolist()
+    list = []
+    for i in range(len(reviews_text[0])):
+        list.append((y[0][i], reviews_text[0][i]))
+
+    print()
+    print("Words with corresponding sentiments:")
+    print(list)
+    print("Total sentiment of review (under softmax):")
+    print(torch.softmax(torch.mean(model2(reviews), 1)[0], dim=0))
+    print()
+
+
 # select model to use
 if __name__ == '__main__':
     if run_recurrent:
@@ -308,6 +324,7 @@ if __name__ == '__main__':
                 train_loss = 0.9 * float(loss.detach()) + 0.1 * train_loss
 
             if test_iter:
+                #print_review_words_MLP(reviews, reviews_text)
                 # print("REVIEW:")
                 # print(reviews[:, i, :])
                 # print("LABEL:")
