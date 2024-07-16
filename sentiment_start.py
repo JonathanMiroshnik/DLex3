@@ -28,7 +28,7 @@ use_RNN = True          # otherwise GRU
 atten_size = 2          # atten > 0 means using restricted self atten
 
 reload_model = False
-num_epochs = 4
+num_epochs = 10
 learning_rate = 0.001
 test_interval = 50
 
@@ -157,7 +157,8 @@ class ExRestSelfAtten(nn.Module):
         self.W_q = MatMul(hidden_size, hidden_size, use_bias=False)
         self.W_k = MatMul(hidden_size, hidden_size, use_bias=False)
         self.W_v = MatMul(hidden_size, hidden_size, use_bias=False)
-        self.W_o = MatMul(hidden_size, output_size)
+        self.layer2 = MatMul(hidden_size, 32)
+        self.layer3 = MatMul(32, output_size)
 
         # Positional Encoding
         self.positional_encoding = self.create_positional_encoding(hidden_size, 100)
@@ -182,8 +183,6 @@ class ExRestSelfAtten(nn.Module):
         x = self.layer1(x)
         x = self.ReLU(x)
 
-        # Add positional encoding
-        x = x + self.positional_encoding[:, :seq_len, :]
 
         # generating x in offsets between -atten_size and atten_size 
         # with zero padding at the ends
@@ -206,10 +205,12 @@ class ExRestSelfAtten(nn.Module):
         vals = self.W_v(x_nei)
 
         attention_scores = torch.matmul(query, keys.transpose(-2, -1)) / self.sqrt_hidden_size
-        atten_weights = self.softmax(attention_scores)
+
+        atten_weights = torch.softmax(attention_scores, dim=3)
+
         context = torch.matmul(atten_weights, vals).squeeze(2)
 
-        output = self.W_o(context)
+        output = self.layer3(torch.relu(self.layer2(context)))
 
         return output, atten_weights
 
@@ -235,6 +236,22 @@ def print_review_words_MLP(reviews, reviews_text):
     print(list)
     print("Total sentiment of review (under softmax):")
     print(torch.softmax(torch.mean(model2(reviews), 1)[0], dim=0))
+    print()
+
+def print_review_words_MLP_Atten(reviews, reviews_text):
+    print(reviews.size())
+    sub_score_, atten_weights_ = model(reviews)
+    y = sub_score_.tolist()
+    z = atten_weights_.tolist()
+    list = []
+    for i in range(len(reviews_text[0])):
+        list.append((reviews_text[0][i], y[0][i], z[0][i]))
+
+    print()
+    print("Words with corresponding sentiments:")
+    print(list)
+    print("Total sentiment of review (under softmax):")
+    print(torch.softmax(torch.mean(sub_score_, 1)[0], dim=0))
     print()
 
 
@@ -324,7 +341,8 @@ if __name__ == '__main__':
                 train_loss = 0.9 * float(loss.detach()) + 0.1 * train_loss
 
             if test_iter:
-                #print_review_words_MLP(reviews, reviews_text)
+                # print_review_words_MLP(reviews, reviews_text)
+                # print_review_words_MLP_Atten(reviews, reviews_text)
                 # print("REVIEW:")
                 # print(reviews[:, i, :])
                 # print("LABEL:")

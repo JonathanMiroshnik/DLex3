@@ -79,7 +79,7 @@ def collact_batch(batch):
 ##########################
 
 my_test_texts = []
-my_test_texts.append("personally, I think this movie is overrated. people were hyping it up as this amazing, terrific one-of-a-kind picture, but personally I didn't like it at all")
+my_test_texts.append("not amazing. don't watch. is bad.")
 my_test_labels = ["neg"]
 
 ##########################
