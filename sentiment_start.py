@@ -25,7 +25,7 @@ hidden_size = 128        # to experiment with
 
 run_recurrent = False    # else run Token-wise MLP
 use_RNN = True          # otherwise GRU
-atten_size = 0          # atten > 0 means using restricted self atten
+atten_size = 2          # atten > 0 means using restricted self atten
 
 reload_model = False
 num_epochs = 10
@@ -208,6 +208,7 @@ class ExRestSelfAtten(nn.Module):
 
         atten_weights = torch.softmax(attention_scores, dim=3)
 
+
         context = torch.matmul(atten_weights, vals).squeeze(2)
 
         output = self.layer3(torch.relu(self.layer2(context)))
@@ -239,7 +240,6 @@ def print_review_words_MLP(reviews, reviews_text):
     print()
 
 def print_review_words_MLP_Atten(reviews, reviews_text):
-    print(reviews.size())
     sub_score_, atten_weights_ = model(reviews)
     y = sub_score_.tolist()
     z = atten_weights_.tolist()
@@ -341,7 +341,7 @@ if __name__ == '__main__':
                 train_loss = 0.9 * float(loss.detach()) + 0.1 * train_loss
 
             if test_iter:
-                print_review_words_MLP(reviews, reviews_text)
+                # print_review_words_MLP(reviews, reviews_text)
                 print_review_words_MLP_Atten(reviews, reviews_text)
                 # print("REVIEW:")
                 # print(reviews[:, i, :])
@@ -353,6 +353,7 @@ if __name__ == '__main__':
                 rounded_output = (output == output.max(dim=1, keepdim=True).values).float()
                 # print(rounded_output)
                 # print("OUTPUT ACCURACY:")
+                print(labels)
                 comparison = (rounded_output == labels)
                 rows_agree = comparison.all(dim=1)
                 num_rows_agree = rows_agree.sum().item()

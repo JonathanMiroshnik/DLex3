@@ -57,7 +57,7 @@ def preprocess_review(s):
 
 
 def preprocess_label(label):
-    return [0.0, 1.0] if label == "negative" else [1.0, 0.0]
+    return [0.0, 1.0] if label == "neg" else [1.0, 0.0]
 
 
 def collact_batch(batch):
@@ -79,7 +79,7 @@ def collact_batch(batch):
 ##########################
 
 my_test_texts = []
-my_test_texts.append("not amazing. don't watch. is bad.")
+my_test_texts.append("not amazing. don't watch. ")
 my_test_labels = ["neg"]
 
 ##########################
