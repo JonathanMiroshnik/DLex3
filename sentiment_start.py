@@ -25,7 +25,7 @@ hidden_size = 128        # to experiment with
 
 run_recurrent = False    # else run Token-wise MLP
 use_RNN = True          # otherwise GRU
-atten_size = 2          # atten > 0 means using restricted self atten
+atten_size = 0          # atten > 0 means using restricted self atten
 
 reload_model = False
 num_epochs = 10
@@ -34,7 +34,7 @@ test_interval = 50
 
 # Loading sataset, use toy = True for obtaining a smaller dataset
 
-train_dataset, test_dataset, num_words, input_size = ld.get_data_set(batch_size)
+train_dataset, test_dataset, num_words, input_size = ld.get_data_set(batch_size, toy=True)
 
 # Special matrix multipication layer (like torch.Linear but can operate on arbitrary sized
 # tensors and considers its last two indices as the matrix.)
@@ -341,8 +341,8 @@ if __name__ == '__main__':
                 train_loss = 0.9 * float(loss.detach()) + 0.1 * train_loss
 
             if test_iter:
-                # print_review_words_MLP(reviews, reviews_text)
-                # print_review_words_MLP_Atten(reviews, reviews_text)
+                print_review_words_MLP(reviews, reviews_text)
+                print_review_words_MLP_Atten(reviews, reviews_text)
                 # print("REVIEW:")
                 # print(reviews[:, i, :])
                 # print("LABEL:")
