@@ -388,7 +388,7 @@ if __name__ == '__main__':
                     print_review(reviews_text[0], nump_subs[0,:,0], nump_subs[0,:,1], labels[0,0], labels[0,1])
 
                 # saving the model
-                # torch.save(model.state_dict(), model.name() + ".pth")
+                torch.save(model.state_dict(), model.name() + ".pth")
 
         total_epoch_test_losses.append(np.mean(epoch_test_losses))
         total_epoch_train_losses.append(np.mean(epoch_train_losses))

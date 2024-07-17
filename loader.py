@@ -79,8 +79,8 @@ def collact_batch(batch):
 ##########################
 
 my_test_texts = []
-my_test_texts.append("good movie")
-my_test_labels = ["positive"]
+my_test_texts.append("bad movie, it was a movie indeed. yap yap yap.")
+my_test_labels = ["negative"]
 
 ##########################
 ##########################
