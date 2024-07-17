@@ -34,7 +34,7 @@ test_interval = 50
 
 # Loading sataset, use toy = True for obtaining a smaller dataset
 
-train_dataset, test_dataset, num_words, input_size = ld.get_data_set(batch_size, toy=True)
+train_dataset, test_dataset, num_words, input_size = ld.get_data_set(batch_size)
 
 # Special matrix multipication layer (like torch.Linear but can operate on arbitrary sized
 # tensors and considers its last two indices as the matrix.)
@@ -116,7 +116,7 @@ class ExMLP(nn.Module):
 
         self.ReLU = torch.nn.ReLU()
 
-        self.intermediate_size = 32;
+        self.intermediate_size = 32
 
         # Token-wise MLP network weights
         self.layer1 = MatMul(input_size,hidden_size)
@@ -153,12 +153,16 @@ class ExRestSelfAtten(nn.Module):
         
         # Token-wise MLP + Restricted Attention network implementation
 
-        self.layer1 = MatMul(input_size,hidden_size)
+        self.layer1 = MatMul(input_size, 32)
+        self.layer2 = MatMul(32, hidden_size)
+
+
         self.W_q = MatMul(hidden_size, hidden_size, use_bias=False)
         self.W_k = MatMul(hidden_size, hidden_size, use_bias=False)
-        self.W_v = MatMul(hidden_size, hidden_size, use_bias=False)
-        self.layer2 = MatMul(hidden_size, 32)
-        self.layer3 = MatMul(32, output_size)
+        self.W_v = MatMul(hidden_size, hidden_size, use_bias=True)
+
+
+        self.layer3 = MatMul(hidden_size, output_size)
 
         # Positional Encoding
         self.positional_encoding = self.create_positional_encoding(hidden_size, 100)
@@ -183,6 +187,10 @@ class ExRestSelfAtten(nn.Module):
         x = self.layer1(x)
         x = self.ReLU(x)
 
+        x = self.layer2(x)
+
+        x = x + self.positional_encoding[:, :seq_len, :]
+
 
         # generating x in offsets between -atten_size and atten_size 
         # with zero padding at the ends
@@ -204,14 +212,28 @@ class ExRestSelfAtten(nn.Module):
         keys = self.W_k(x_nei)
         vals = self.W_v(x_nei)
 
+
+
+
+
         attention_scores = torch.matmul(query, keys.transpose(-2, -1)) / self.sqrt_hidden_size
+
+
 
         atten_weights = torch.softmax(attention_scores, dim=3)
 
 
         context = torch.matmul(atten_weights, vals).squeeze(2)
 
-        output = self.layer3(torch.relu(self.layer2(context)))
+        output = self.layer3(context)
+
+        # print(query.size())
+        # print(keys.transpose(-2, -1).size())
+        # print(attention_scores.size())
+        # print(vals.size())
+        # print(context.size())
+        # print(output.size())
+        # print()
 
         return output, atten_weights
 
@@ -251,7 +273,7 @@ def print_review_words_MLP_Atten(reviews, reviews_text):
     print("Words with corresponding sentiments:")
     print(list)
     print("Total sentiment of review (under softmax):")
-    print(torch.softmax(torch.mean(sub_score_, 1)[0], dim=0))
+    print(torch.mean(sub_score_, 1)[0])
     print()
 
 
@@ -353,7 +375,6 @@ if __name__ == '__main__':
                 rounded_output = (output == output.max(dim=1, keepdim=True).values).float()
                 # print(rounded_output)
                 # print("OUTPUT ACCURACY:")
-                print(labels)
                 comparison = (rounded_output == labels)
                 rows_agree = comparison.all(dim=1)
                 num_rows_agree = rows_agree.sum().item()
