@@ -25,7 +25,7 @@ hidden_size = 128        # to experiment with
 
 run_recurrent = False    # else run Token-wise MLP
 use_RNN = True          # otherwise GRU
-atten_size = 2          # atten > 0 means using restricted self atten
+atten_size = 0          # atten > 0 means using restricted self atten
 
 reload_model = False
 num_epochs = 10
@@ -153,16 +153,15 @@ class ExRestSelfAtten(nn.Module):
         
         # Token-wise MLP + Restricted Attention network implementation
 
-        self.layer1 = MatMul(input_size, 32)
-        self.layer2 = MatMul(32, hidden_size)
+        self.layer1 = MatMul(input_size, hidden_size)
 
 
         self.W_q = MatMul(hidden_size, hidden_size, use_bias=False)
         self.W_k = MatMul(hidden_size, hidden_size, use_bias=False)
         self.W_v = MatMul(hidden_size, hidden_size, use_bias=True)
 
-
-        self.layer3 = MatMul(hidden_size, output_size)
+        self.layer2 = MatMul(hidden_size, 32)
+        self.layer3 = MatMul(32, output_size)
 
         # Positional Encoding
         self.positional_encoding = self.create_positional_encoding(hidden_size, 100)
@@ -187,7 +186,6 @@ class ExRestSelfAtten(nn.Module):
         x = self.layer1(x)
         x = self.ReLU(x)
 
-        x = self.layer2(x)
 
         x = x + self.positional_encoding[:, :seq_len, :]
 
@@ -225,7 +223,7 @@ class ExRestSelfAtten(nn.Module):
 
         context = torch.matmul(atten_weights, vals).squeeze(2)
 
-        output = self.layer3(context)
+        output = self.layer3(self.ReLU(self.layer2(context)))
 
         # print(query.size())
         # print(keys.transpose(-2, -1).size())
@@ -248,8 +246,8 @@ def print_review(rev_text, sbs1, sbs2, lbl1, lbl2):
 
 
 def print_review_words_MLP(reviews, reviews_text):
-    model2 = torch.load("MLP.pth")
-    y = model2(reviews).tolist()
+    # model2 = torch.load("MLP.pth")
+    # y = model2(reviews).tolist()
     list = []
     for i in range(len(reviews_text[0])):
         list.append((y[0][i], reviews_text[0][i]))
@@ -258,11 +256,14 @@ def print_review_words_MLP(reviews, reviews_text):
     print("Words with corresponding sentiments:")
     print(list)
     print("Total sentiment of review (under softmax):")
-    print(torch.softmax(torch.mean(model2(reviews), 1)[0], dim=0))
+    # print(torch.softmax(torch.mean(model2(reviews), 1)[0], dim=0))
     print()
 
 def print_review_words_MLP_Atten(reviews, reviews_text):
-    sub_score_, atten_weights_ = model(reviews)
+    model2 = ExRestSelfAtten(input_size, output_size, hidden_size)
+    # model2.load_state_dict(torch.load("MLP_atten.pth"))
+    print(reviews.size())
+    sub_score_, atten_weights_ = model2(reviews)
     y = sub_score_.tolist()
     z = atten_weights_.tolist()
     list = []
@@ -307,9 +308,20 @@ if __name__ == '__main__':
     train_accuracies = list()
     test_accuracies = list()
 
+    total_epoch_test_accuracies = list()
+
+    total_epoch_test_losses = list()
+    total_epoch_train_losses = list()
+
+
     # training steps in which a test step is executed every test_interval
 
     for epoch in range(num_epochs):
+
+        epoch_test_accuracies = list()
+
+        epoch_test_losses = list()
+        epoch_train_losses = list()
 
         itr = 0 # iteration counter within each epoch
 
@@ -384,6 +396,10 @@ if __name__ == '__main__':
                 test_accuracy = num_rows_agree / len(labels)
                 test_accuracies.append(test_accuracy)
 
+                epoch_test_accuracies.append(test_accuracy)
+                epoch_train_losses.append(train_loss)
+                epoch_test_losses.append(test_loss)
+
                 train_losses.append(train_loss)
                 test_losses.append(test_loss)
 
@@ -401,16 +417,53 @@ if __name__ == '__main__':
                     print_review(reviews_text[0], nump_subs[0,:,0], nump_subs[0,:,1], labels[0,0], labels[0,1])
 
                 # saving the model
-                torch.save(model, model.name() + ".pth")
+                torch.save(model.state_dict(), model.name() + ".pth")
+
+        total_epoch_test_losses.append(np.mean(epoch_test_losses))
+        total_epoch_train_losses.append(np.mean(epoch_train_losses))
+        total_epoch_test_accuracies.append(np.mean(epoch_test_accuracies))
+
+
 
     if plot_graphs:
+        epochs = list(range(1, len(train_losses) + 1))
+        plt.figure(figsize=(10, 6))  # specify figure size
+
+
+        plt.plot(epochs, test_accuracies, label='Test Accuracy')
+
+        plt.title('Training and Test Loss over Steps')
+        plt.xlabel('Step * 50')
+        plt.ylabel('Loss')
+        plt.legend()
+
+        plt.grid(True)
+        plt.tight_layout()
+
+        plt.show()
+
         epochs = list(range(1, len(train_losses) + 1))
         plt.figure(figsize=(10, 6))  # specify figure size
 
         plt.plot(epochs, train_losses, label='Train Loss')
         plt.plot(epochs, test_losses, label='Test Loss')
 
-        plt.title('Training and Test Loss over Epochs')
+        plt.title('Training and Test Loss over Steps')
+        plt.xlabel('Step * 50')
+        plt.ylabel('Accuracy')
+        plt.legend()
+
+        plt.grid(True)
+        plt.tight_layout()
+
+        plt.show()
+
+
+        epochs = list(range(1, len(total_epoch_test_losses) + 1))
+        plt.figure(figsize=(10, 6))  # specify figure size
+
+        plt.plot(epochs, total_epoch_test_accuracies, label='Epoch test accuracy')
+        plt.title('Test Accuracy over Steps')
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.legend()
@@ -420,11 +473,13 @@ if __name__ == '__main__':
 
         plt.show()
 
+        epochs = list(range(1, len(total_epoch_test_losses) + 1))
         plt.figure(figsize=(10, 6))  # specify figure size
-        plt.plot(epochs, test_accuracies, label='Test Accuracy')
-        plt.title('Test Accuracy over Epochs')
+        plt.plot(epochs, total_epoch_test_losses, label='Epoch test loss')
+        plt.plot(epochs, total_epoch_train_losses, label='Epoch train loss')
+        plt.title('Test Accuracy over Steps')
         plt.xlabel('Epoch')
-        plt.ylabel('Test Accuracy')
+        plt.ylabel('Accuracy')
         plt.legend()
 
         plt.grid(True)
