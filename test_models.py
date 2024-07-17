@@ -27,6 +27,61 @@ test_interval = 50
 
 train_dataset, test_dataset, num_words, input_size = ld.get_data_set(batch_size, toy=True)
 
+
+class ExRNN(nn.Module):
+    def __init__(self, input_size, output_size, hidden_size):
+        super(ExRNN, self).__init__()
+
+        self.hidden_size = hidden_size
+        self.sigmoid = torch.sigmoid
+
+        # RNN Cell weights
+        self.in2hidden = nn.Linear(input_size + hidden_size, hidden_size)
+        self.hidden2out = nn.Linear(hidden_size, output_size)
+
+    def name(self):
+        return "RNN"
+
+    def forward(self, x, hidden_state):
+        hidden = self.sigmoid(self.in2hidden(torch.cat((x, hidden_state), dim=1)))
+        output = self.sigmoid(self.hidden2out(hidden))
+
+        return output, hidden_state
+
+    def init_hidden(self, bs):
+        return torch.zeros(bs, self.hidden_size).to(device)
+
+
+# Implements GRU Unit
+
+class ExGRU(nn.Module):
+    def __init__(self, input_size, output_size, hidden_size):
+        super(ExGRU, self).__init__()
+        self.hidden_size = hidden_size
+
+        # GRU Cell weights
+        self.W_z = nn.Linear(input_size + hidden_size, hidden_size)  # Update gate
+        self.W_r = nn.Linear(input_size + hidden_size, hidden_size)  # Reset gate
+        self.W = nn.Linear(input_size + hidden_size, hidden_size)  # Current memory content
+
+        # Output layer
+        self.fc = nn.Linear(hidden_size, output_size)
+
+    def name(self):
+        return "GRU"
+
+    def forward(self, x, hidden_state):
+        z_t = torch.sigmoid(self.W_z(torch.cat((x, hidden_state), dim=1)))
+        r_t = torch.sigmoid(self.W_r(torch.cat((x, hidden_state), dim=1)))
+        h_tilde_t = torch.tanh(self.W(torch.cat((x, r_t * hidden_state), dim=1)))
+        hidden = (1 - z_t) * hidden_state + z_t * h_tilde_t
+        output = torch.sigmoid(self.fc(hidden))
+
+        return output, hidden
+
+    def init_hidden(self, bs):
+        return torch.zeros(bs, self.hidden_size).to(device)
+
 class MatMul(nn.Module):
     def __init__(self, in_channels, out_channels, use_bias = True):
         super(MatMul, self).__init__()
@@ -186,11 +241,40 @@ def print_review_words_MLP_Atten(reviews, reviews_text):
     print(torch.softmax(torch.mean(sub_score_, 1)[0], dim=0))
     print()
 
+def print_review_words_GRU(reviews, reviews_text):
+    model3 = ExGRU(input_size, output_size, hidden_size)
+    model3.load_state_dict(torch.load("GRU.pth"))
+    hidden_state = model3.init_hidden(int(labels.shape[0]))
+    for i in range(num_words):
+        output, hidden_state = model3(reviews[:, i, :], hidden_state)  # HIDE
+
+    print(output)
+    print(torch.softmax(output, dim=1))
+    print()
+
+def print_review_words_RNN(reviews, reviews_text):
+    model4 = ExRNN(input_size, output_size, hidden_size)
+    model4.load_state_dict(torch.load("RNN.pth"))
+    hidden_state = model4.init_hidden(int(labels.shape[0]))
+    for i in range(num_words):
+        output, hidden_state = model4(reviews[:, i, :], hidden_state)  # HIDE
+
+    print(output)
+    print(torch.softmax(output, dim=1))
+    print()
+
 if __name__ == '__main__':
     iter = 0
 
-    for labels, reviews, reviews_text in test_dataset:
-        print_review_words_MLP(reviews, reviews_text)
+    # for labels, reviews, reviews_text in test_dataset:
+    #     print_review_words_MLP(reviews, reviews_text)
+    #
+    # for labels, reviews, reviews_text in test_dataset:
+    #     print_review_words_MLP_Atten(reviews, reviews_text)
 
     for labels, reviews, reviews_text in test_dataset:
-        print_review_words_MLP_Atten(reviews, reviews_text)
+        print(reviews_text)
+        print_review_words_GRU(reviews, reviews_text)
+
+    for labels, reviews, reviews_text in test_dataset:
+        print_review_words_RNN(reviews, reviews_text)

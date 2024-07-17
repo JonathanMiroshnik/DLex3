@@ -23,7 +23,7 @@ batch_size = 32
 output_size = 2
 hidden_size = 128        # to experiment with
 
-run_recurrent = False    # else run Token-wise MLP
+run_recurrent = True    # else run Token-wise MLP
 use_RNN = True          # otherwise GRU
 atten_size = 0          # atten > 0 means using restricted self atten
 
@@ -185,10 +185,7 @@ class ExRestSelfAtten(nn.Module):
 
         x = self.layer1(x)
         x = self.ReLU(x)
-
-
         x = x + self.positional_encoding[:, :seq_len, :]
-
 
         # generating x in offsets between -atten_size and atten_size 
         # with zero padding at the ends
@@ -209,20 +206,9 @@ class ExRestSelfAtten(nn.Module):
         query = self.W_q(x).unsqueeze(2)
         keys = self.W_k(x_nei)
         vals = self.W_v(x_nei)
-
-
-
-
-
         attention_scores = torch.matmul(query, keys.transpose(-2, -1)) / self.sqrt_hidden_size
-
-
-
         atten_weights = torch.softmax(attention_scores, dim=3)
-
-
         context = torch.matmul(atten_weights, vals).squeeze(2)
-
         output = self.layer3(self.ReLU(self.layer2(context)))
 
         # print(query.size())
@@ -243,40 +229,6 @@ def print_review(rev_text, sbs1, sbs2, lbl1, lbl2):
             
     # implement
     pass
-
-
-def print_review_words_MLP(reviews, reviews_text):
-    # model2 = torch.load("MLP.pth")
-    # y = model2(reviews).tolist()
-    list = []
-    for i in range(len(reviews_text[0])):
-        list.append((y[0][i], reviews_text[0][i]))
-
-    print()
-    print("Words with corresponding sentiments:")
-    print(list)
-    print("Total sentiment of review (under softmax):")
-    # print(torch.softmax(torch.mean(model2(reviews), 1)[0], dim=0))
-    print()
-
-def print_review_words_MLP_Atten(reviews, reviews_text):
-    model2 = ExRestSelfAtten(input_size, output_size, hidden_size)
-    # model2.load_state_dict(torch.load("MLP_atten.pth"))
-    print(reviews.size())
-    sub_score_, atten_weights_ = model2(reviews)
-    y = sub_score_.tolist()
-    z = atten_weights_.tolist()
-    list = []
-    for i in range(len(reviews_text[0])):
-        list.append((reviews_text[0][i], y[0][i], z[0][i]))
-
-    print()
-    print("Words with corresponding sentiments:")
-    print(list)
-    print("Total sentiment of review (under softmax):")
-    print(torch.mean(sub_score_, 1)[0])
-    print()
-
 
 # select model to use
 if __name__ == '__main__':
@@ -309,6 +261,7 @@ if __name__ == '__main__':
     test_accuracies = list()
 
     total_epoch_test_accuracies = list()
+    total_epoch_train_accuracies = list()
 
     total_epoch_test_losses = list()
     total_epoch_train_losses = list()
@@ -319,6 +272,7 @@ if __name__ == '__main__':
     for epoch in range(num_epochs):
 
         epoch_test_accuracies = list()
+        epoch_train_accuracies = list()
 
         epoch_test_losses = list()
         epoch_train_losses = list()
@@ -329,10 +283,13 @@ if __name__ == '__main__':
 
             itr = itr + 1
 
+            labels_train, reviews_train, reviews_text_train = labels, reviews, reviews_text
+
             if (itr + 1) % test_interval == 0:
                 test_iter = True
                 labels, reviews, reviews_text = next(iter(test_dataset)) # get a test batch
             else:
+
                 test_iter = False
 
             # Recurrent nets (RNN/GRU)
@@ -343,10 +300,14 @@ if __name__ == '__main__':
                 for i in range(num_words):
                     output, hidden_state = model(reviews[:,i,:], hidden_state)  # HIDE
 
+                if test_iter:
+                    hidden_state_train = model.init_hidden(int(labels.shape[0]))
+
+                    for i in range(num_words):
+                        output_train, hidden_state_train = model(reviews_train[:, i, :], hidden_state_train)  # HIDE
+
             else:
-
             # Token-wise networks (MLP / MLP + Atten.)
-
                 sub_score = []
                 if atten_size > 0:
                     # MLP + atten
@@ -356,6 +317,18 @@ if __name__ == '__main__':
                     sub_score = model(reviews)
 
                 output = torch.mean(sub_score, 1)
+
+                if test_iter:
+                    sub_score_train = []
+                    if atten_size > 0:
+                        # MLP + atten
+                        sub_score_train, atten_weights_train = model(reviews_train)
+                    else:
+                        # MLP
+                        sub_score_train = model(reviews_train)
+
+                    output_train = torch.mean(sub_score_train, 1)
+
 
             # cross-entropy loss
 
@@ -375,28 +348,25 @@ if __name__ == '__main__':
                 train_loss = 0.9 * float(loss.detach()) + 0.1 * train_loss
 
             if test_iter:
-                # print_review_words_MLP(reviews, reviews_text)
-                print_review_words_MLP_Atten(reviews, reviews_text)
-                # print("REVIEW:")
-                # print(reviews[:, i, :])
-                # print("LABEL:")
-                # print(labels)
-                # print("OUTPUT:")
-                # print(output)
-                # print("ROUNDED OUTPUT:")
                 rounded_output = (output == output.max(dim=1, keepdim=True).values).float()
-                # print(rounded_output)
-                # print("OUTPUT ACCURACY:")
                 comparison = (rounded_output == labels)
                 rows_agree = comparison.all(dim=1)
                 num_rows_agree = rows_agree.sum().item()
-
-                # train_accuracies.append()
-
                 test_accuracy = num_rows_agree / len(labels)
                 test_accuracies.append(test_accuracy)
 
                 epoch_test_accuracies.append(test_accuracy)
+
+                rounded_output = (output_train == output_train.max(dim=1, keepdim=True).values).float()
+                comparison = (rounded_output == labels_train)
+                rows_agree = comparison.all(dim=1)
+                num_rows_agree = rows_agree.sum().item()
+                train_accuracy = num_rows_agree / len(labels_train)
+                train_accuracies.append(train_accuracy)
+
+                epoch_train_accuracies.append(train_accuracy)
+
+
                 epoch_train_losses.append(train_loss)
                 epoch_test_losses.append(test_loss)
 
@@ -407,8 +377,9 @@ if __name__ == '__main__':
                     f"Epoch [{epoch + 1}/{num_epochs}], "
                     f"Step [{itr + 1}/{len(train_dataset)}], "
                     f"Train Loss: {train_loss:.4f}, "
-                    f"Test Loss: {test_loss:.4f}"
-                    f"Test Accuracy: {test_accuracy:.4f}"
+                    f"Test Loss: {test_loss:.4f} "
+                    f"Test Accuracy: {test_accuracy:.4f} "
+                    f"Train Accuracy: {train_accuracy:.4f}"
                 )
 
                 if not run_recurrent:
@@ -417,72 +388,66 @@ if __name__ == '__main__':
                     print_review(reviews_text[0], nump_subs[0,:,0], nump_subs[0,:,1], labels[0,0], labels[0,1])
 
                 # saving the model
-                torch.save(model.state_dict(), model.name() + ".pth")
+                # torch.save(model.state_dict(), model.name() + ".pth")
 
         total_epoch_test_losses.append(np.mean(epoch_test_losses))
         total_epoch_train_losses.append(np.mean(epoch_train_losses))
         total_epoch_test_accuracies.append(np.mean(epoch_test_accuracies))
+        total_epoch_train_accuracies.append(np.mean(epoch_train_accuracies))
 
 
 
     if plot_graphs:
         epochs = list(range(1, len(train_losses) + 1))
         plt.figure(figsize=(10, 6))  # specify figure size
-
-
         plt.plot(epochs, test_accuracies, label='Test Accuracy')
-
-        plt.title('Training and Test Loss over Steps')
-        plt.xlabel('Step * 50')
-        plt.ylabel('Loss')
+        plt.plot(epochs, train_accuracies, label='Train Accuracy')
+        plt.title('Accuracies over Steps')
+        plt.xlabel('Step / 50')
+        plt.ylabel('Accuracy')
         plt.legend()
-
         plt.grid(True)
         plt.tight_layout()
-
         plt.show()
+
+
 
         epochs = list(range(1, len(train_losses) + 1))
         plt.figure(figsize=(10, 6))  # specify figure size
-
         plt.plot(epochs, train_losses, label='Train Loss')
         plt.plot(epochs, test_losses, label='Test Loss')
-
-        plt.title('Training and Test Loss over Steps')
-        plt.xlabel('Step * 50')
-        plt.ylabel('Accuracy')
+        plt.title('Losses over Steps')
+        plt.xlabel('Step / 50')
+        plt.ylabel('Loss')
         plt.legend()
-
         plt.grid(True)
         plt.tight_layout()
-
         plt.show()
+
+
+
+        epochs = list(range(1, len(total_epoch_test_accuracies) + 1))
+        plt.figure(figsize=(10, 6))  # specify figure size
+        plt.plot(epochs, total_epoch_test_accuracies, label='Test accuracy')
+        plt.plot(epochs, total_epoch_train_accuracies, label='Train accuracy')
+        plt.title('Accuracy over Epochs')
+        plt.xlabel('Epoch')
+        plt.ylabel('Accuracy')
+        plt.legend()
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
 
 
         epochs = list(range(1, len(total_epoch_test_losses) + 1))
         plt.figure(figsize=(10, 6))  # specify figure size
-
-        plt.plot(epochs, total_epoch_test_accuracies, label='Epoch test accuracy')
-        plt.title('Test Accuracy over Steps')
+        plt.plot(epochs, total_epoch_test_losses, label='Test loss')
+        plt.plot(epochs, total_epoch_train_losses, label='Train loss')
+        plt.title('Losses over Epochs')
         plt.xlabel('Epoch')
         plt.ylabel('Loss')
         plt.legend()
-
         plt.grid(True)
         plt.tight_layout()
-
-        plt.show()
-
-        epochs = list(range(1, len(total_epoch_test_losses) + 1))
-        plt.figure(figsize=(10, 6))  # specify figure size
-        plt.plot(epochs, total_epoch_test_losses, label='Epoch test loss')
-        plt.plot(epochs, total_epoch_train_losses, label='Epoch train loss')
-        plt.title('Test Accuracy over Steps')
-        plt.xlabel('Epoch')
-        plt.ylabel('Accuracy')
-        plt.legend()
-
-        plt.grid(True)
-        plt.tight_layout()
-
         plt.show()
