@@ -248,6 +248,7 @@ def print_review_words_GRU(reviews, reviews_text):
     for i in range(num_words):
         output, hidden_state = model3(reviews[:, i, :], hidden_state)  # HIDE
 
+    print("GRU:")
     print(torch.softmax(output, dim=1)[0])
 
     rounded_output = (output == output.max(dim=1, keepdim=True).values).float()
@@ -255,7 +256,7 @@ def print_review_words_GRU(reviews, reviews_text):
     rows_agree = comparison.all(dim=1)
     num_rows_agree = rows_agree.sum().item()
     test_accuracy = num_rows_agree / len(labels)
-    print("GRU Accuracy: " + str(test_accuracy))
+    print("Accuracy: " + str(test_accuracy))
 
 def print_review_words_RNN(reviews, reviews_text):
     model4 = ExRNN(input_size, output_size, hidden_size)
@@ -264,7 +265,15 @@ def print_review_words_RNN(reviews, reviews_text):
     for i in range(num_words):
         output, hidden_state = model4(reviews[:, i, :], hidden_state)  # HIDE
 
+    print("RNN:")
     print(torch.softmax(output, dim=1)[0])
+
+    rounded_output = (output == output.max(dim=1, keepdim=True).values).float()
+    comparison = (rounded_output == labels)
+    rows_agree = comparison.all(dim=1)
+    num_rows_agree = rows_agree.sum().item()
+    test_accuracy = num_rows_agree / len(labels)
+    print("Accuracy: " + str(test_accuracy))
 
 if __name__ == '__main__':
     iter = 0
@@ -276,9 +285,10 @@ if __name__ == '__main__':
     #     print_review_words_MLP_Atten(reviews, reviews_text)
 
     for labels, reviews, reviews_text in test_dataset:
-        print(reviews_text[0])
+        print(" ".join(reviews_text[0]))
         print(labels[0])
         print_review_words_GRU(reviews, reviews_text)
+        print_review_words_RNN(reviews, reviews_text)
         print()
         print()
 
