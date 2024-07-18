@@ -1,0 +1,1267 @@
+#LyX 2.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 544
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "default" "default"
+\font_sans "default" "default"
+\font_typewriter "default" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\use_microtype false
+\use_dash_ligatures true
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\use_minted 0
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2cm
+\rightmargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\is_math_indent 0
+\math_numbering_side default
+\quotes_style english
+\dynamic_quotes 0
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+EX3 Practical IDL Nadav Eisen and Jonathan Miroshnik
+\end_layout
+
+\begin_layout Part*
+Part 1:
+\end_layout
+
+\begin_layout Section*
+Training Results:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+We ran both the GRU and RNN under hidden space dimensions of 128 and 64.
+ 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+In all of our experiments with the recurren net works, we trained them each
+ for 10 epochs of the same 30000 reviews each, the results obtained were:
+\end_layout
+
+\begin_layout Subsection*
+RNN:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Training the 64-size hidden dimension RNN, the results obtained were (all
+ figures averaged out on the epoch):
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+\begin_inset Graphics
+	filename Training Results/RNN Results 64/Figure 3.png
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename Training Results/RNN Results 64/Figure 4.png
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Training the 128-size hidden dimension RNN, the results obtained were (all
+ figures averaged out on the epoch):
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+\begin_inset Graphics
+	filename Training Results/RNN Results 128/Figure 3.png
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename Training Results/RNN Results 128/Figure 4.png
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+GRU:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Training the 64-size hidden dimension GRU, the results obtained were (all
+ figures averaged out on the epoch):
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+\begin_inset Graphics
+	filename Training Results/GRU Results 64/Figure 3.png
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename Training Results/GRU Results 64/Figure 4.png
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Training the 128-size hidden dimension GRU, the results obtained were (all
+ figures averaged out on the epoch):
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+\begin_inset Graphics
+	filename Training Results/GRU Results 128/Figure 3.png
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename Training Results/GRU Results 128/Figure 4.png
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection*
+Training summary:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Training the 64-size hidden dimension RNN, the results obtained were (all
+ figures averaged out on the epoch):
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+As we can see, in any case, the RNN doesn't really learn at all.
+ This may be due to the vanishing/exploding gradient problem of Elmann's
+ basic RNN network, as this network is trained on long, 100 words reviews,
+ the gradient of the loss at a certain point is exponentized to the power
+ of 100, leading to it either being close to 0, i.e., vanishing, or unreasonably
+ large, i.e.
+ exploding.
+ As such, an iteration on this gradient every time won't bring us closer
+ to a solution, it will only take us too much farther or leave us in the
+ same place.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+However, since the GRU doesn't suffer from this same problem, it learns
+ effectively, and not only that, has the capability to 
+\begin_inset Quotes eld
+\end_inset
+
+remember 
+\begin_inset Quotes eld
+\end_inset
+
+ better.
+ In this model, not only does the gradient with respect to the hidden state
+ not vanish over time, the hidden state itself doesn't vanish either, as
+ it can be integrated into each cell each time by addition.
+ As such, this model has a better capability to 
+\begin_inset Quotes eld
+\end_inset
+
+remember
+\begin_inset Quotes erd
+\end_inset
+
+ with the hidden state.
+ Therefore, the more memory the better, and therefore the bigger the hidden
+ state dimension the better, which we can see in the results.
+\end_layout
+
+\begin_layout Section*
+Capabilities:
+\end_layout
+
+\begin_layout Standard
+In any case, we saw that the results with a 128 sized hidden dimesion were
+ better (with the RNN it doesn't matter much at all), so we'll use these
+ models.
+ We'll experiment on the accuracies of custom movie reviews that we will
+ write.
+ 
+\end_layout
+
+\begin_layout Subsection*
+RNN:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+As we saw, the RNN doesn't learn much at all, and its capabilities are next
+ to none.
+ The model outputs the same probability distribution under softmax under
+ shorter reviews.
+ For example, the output for all of these reviews was close to [0.5273, 0.4727]:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+\begin_inset Quotes eld
+\end_inset
+
+bad
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+\begin_inset Quotes eld
+\end_inset
+
+movie is good the rest of the review is not relevant m just saying random
+ thing
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+\begin_inset Quotes eld
+\end_inset
+
+a gripping thriller that masterfully intertwines mystery and drama set in
+ dystopian future the story follows detective clara voss as she unravels
+ web of secrets in city where shadows hold memories the film breathtaking
+ visuals and haunting soundtrack create an immersive atmosphere that keeps
+ viewers on the edge of their seats lead actress emily hart delivers powerful
+ performance capturing clara determination and vulnerability with nuance
+ though the plot occasionally drifts into complexity the movie unexpected
+ twists and emotional depth make it must watch for fans of the genre
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+However, for longer reviews the probability distribution is more varying,
+ for example, the review:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+\begin_inset Quotes eld
+\end_inset
+
+this is really really bad lamas shows just how second rate actor does his
+ job but what makes it worth watching is the scene where oj angrily grabs
+ fellow cop by the throat as if to kill them while the jukebox plays song
+ with the lyric got the evidence on you makes me want to hear the rest of
+ the lyrics attributed to david gregoli and leslie oren but couldn find
+ it on itunes talk about seeing into the future too funny for words the
+ rest of the movie is forgettable the score and songs are more interesting
+ than the 
+\begin_inset Quotes eld
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Was given a softmaxxed distribution of [0.5065, 0.4935].
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Either way, the model always outputs some distribution close to [0.5,0.5].
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+The model's accuracy on 10 randomized reviews written by ChatGPT not in
+ the list of IMDB reviews was 5/10.
+ The list of these reviews along with their sentiments is written for reference
+ at the end of this document.
+\end_layout
+
+\begin_layout Subsection*
+GRU:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+The GRU has more fascinating capabilities.
+ 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Experimenting with the capabilities of this model, we want to see how much
+ it understands the definitions of specific words, how it understand them
+ in context, and how well it rememembers.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Testing its understanding of individual words, the model marked the review
+ 
+\begin_inset Quotes eld
+\end_inset
+
+good
+\begin_inset Quotes erd
+\end_inset
+
+ as positive and the review 
+\begin_inset Quotes eld
+\end_inset
+
+bad
+\begin_inset Quotes erd
+\end_inset
+
+ as negative.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Furthermore, it also seems to have a mixed understanding words in their
+ context, as the model marked the review 
+\begin_inset Quotes eld
+\end_inset
+
+i liked it not that bad
+\begin_inset Quotes erd
+\end_inset
+
+ as positive, however, it marked the review 
+\begin_inset Quotes eld
+\end_inset
+
+not bad
+\begin_inset Quotes erd
+\end_inset
+
+ as negative.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Finally, the GRU has very good memory through the hidden state, which can
+ be seen through the following reviews where the first sentence is opinionated,
+ and the rest are nuetral:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+The review 
+\begin_inset Quotes eld
+\end_inset
+
+the secret garden delights with its enchanting visuals set in the early
+ the film follows young orphaned girl who discovers magical hidden garden
+ on her uncle estate as she explores the garden she uncovers family secrets
+ and finds healing in unexpected ways
+\begin_inset Quotes erd
+\end_inset
+
+ is marked as positive.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+The review 
+\begin_inset Quotes eld
+\end_inset
+
+the secret garden is bad movie set in the early the film follows young orphaned
+ girl who discovers magical hidden garden on her uncle estate as she explores
+ the garden she uncovers family secrets and finds healing in unexpected
+ ways.
+\begin_inset Quotes erd
+\end_inset
+
+ is marked as negative.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Its accuracy on 10 randomized reviews written by ChatGPT not in the list
+ of IMDB reviews was 9/10.
+ The list of these reviews along with their sentiments is written for reference
+ at the end of this document.
+\end_layout
+
+\begin_layout Part*
+Part 2:
+\end_layout
+
+\begin_layout Section*
+Training Results:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Once again, we trained this network for 10 epochs of the same 30000 reviews
+ each, the results obtained were:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+\begin_inset Graphics
+	filename Training Results/MLP Results/MLP 3.png
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename Training Results/MLP Results/MLP 4.png
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Architecture:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+The archtecture is a basic MLP that functions on each word, first a FC layer
+ to dimension 128, a relu activation, next an FC layer to dimension 32,
+ a relu activation, and finally an FC layer to the output dimesion.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Then, the layer sums up all of the weights of the words to reach a final
+ two dimesional vector (which is not yet softmaxxed)
+\end_layout
+
+\begin_layout Section*
+Capabilities:
+\end_layout
+
+\begin_layout Standard
+We'll give an example of reviews that are 
+\begin_inset Formula $TP,TN,FP,FN$
+\end_inset
+
+ for the model in the format of a list of the words of the review and their
+ corresponding output vector under the model, and the final softmaxxed output
+ vector of the model.
+\end_layout
+
+\begin_layout Subsection*
+TP:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Review:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+The movie was amazing, stellar production and great acting.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[([0.0, 0.0], 'the'), ([0.0, 0.0], 'movie'), ([0.0, 0.0], 'was'), ([56.50807189941406,
+ 0.0], 'amazing'), ([23.420183181762695, 3.781653642654419], 'stellar'), ([0.4153355
+360031128, 6.273113250732422], 'production'), ([7.234606742858887, 0.0], 'and'),
+ ([36.982452392578125, 0.0], 'great'), ([0.0, 0.0], 'acting')] 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Prediction:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[0.8365, 0.1635]
+\end_layout
+
+\begin_layout Subsection*
+TN:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Review:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+This movie is very bad, didn't like it at all.
+ The acting was horrible.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[([1.7131247520446777, 0.0], 'this'), ([0.0, 0.0], 'movie'), ([5.549863338470459,
+ 0.0], 'is'), ([13.168492317199707, 0.0], 'very'), ([0.0, 77.7398452758789],
+ 'bad'), ([0.0, 12.127962112426758], 'didn'), ([0.0, 0.0], 'like'), ([8.7759218215942
+38, 0.0], 'it'), ([0.0, 0.0], 'at'), ([5.16981840133667, 0.0], 'all'), ([0.0,
+ 0.0], 'the'), ([0.0, 0.0], 'acting'), ([0.0, 0.0], 'was'), ([0.0, 128.32583618164062],
+ 'horrible')] 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Prediction:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[0.2014, 0.7986]
+\end_layout
+
+\begin_layout Subsection*
+FP:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Review:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+The plot, well, its pretty amazing, but the movie, oh boy, its really really
+ bad.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[([0.4206301271915436, 0.0], 'the'), ([0.0, 23.550460815429688], 'plot'), ([8.4659109
+11560059, 0.0], 'well'), ([12.2099027633667, 0.0], 'its'), ([23.132366180419922,
+ 38.21160888671875], 'pretty'), ([68.83562469482422, 0.0], 'amazing'), ([2.963550329
+208374, 0.0], 'but'), ([0.4206301271915436, 0.0], 'the'), ([3.9967453479766846,
+ 6.924318313598633], 'movie'), ([0.0, 47.59703063964844], 'oh'), ([0.0, 2.95454859733
+58154], 'boy'), ([12.2099027633667, 0.0], 'its'), ([16.33852195739746, 9.84809684753
+418], 'really'), ([16.33852195739746, 9.84809684753418], 'really'), ([0.0,
+ 76.86447143554688], 'bad')] 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Prediction:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[0.5319, 0.4681]
+\end_layout
+
+\begin_layout Subsection*
+FN:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Review:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Some people thought this movie was horrible, but I enjoyed it very much.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[([0.0, 2.9488751888275146], 'some'), ([7.488848686218262, 0.0], 'people'),
+ ([1.5628175735473633, 2.4887747764587402], 'thought'), ([1.1574430465698242,
+ 0.0], 'this'), ([3.9967451095581055, 6.924318313598633], 'movie'), ([0.190939605236
+05347, 1.5451560020446777], 'was'), ([0.0, 142.69271850585938], 'horrible'),
+ ([2.963550329208374, 0.0], 'but'), ([57.1386833190918, 0.0], 'enjoyed'), ([9.5950746
+53625488, 0.0], 'it'), ([10.278397560119629, 0.0], 'very'), ([1.2487763166427612,
+ 7.154980659484863], 'much')] 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Prediction:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[0.4954, 0.5046]
+\end_layout
+
+\begin_layout Subsection*
+Analysis:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+First of all, we know that this model acts on individual words, only analyzing
+ the full review by summing up the word's weights.
+ As such, regardless of the overall sentiment of the review, if the weight
+ of the positive words is larger than the weight of the negative words,
+ then the model will classify the review as positive, and vice versa.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+We can see that this is why the model fails on the false positive and false
+ negative.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+In the false positive, words like 
+\begin_inset Quotes eld
+\end_inset
+
+amazing
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+terrific
+\begin_inset Quotes erd
+\end_inset
+
+ have large positive vectors [56.50807189941406, 0.0], [45.08697509765625,
+ 0.0] respectively but since the model analyzes each word individually, it
+ can't tell that they're being used in a negative context.
+ As such, the model classifies this review as positive.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+In the false negative, the word 
+\begin_inset Quotes eld
+\end_inset
+
+horrible
+\begin_inset Quotes erd
+\end_inset
+
+ has a huge negative vector weight of ([0.0, 142.69271850585938], but the
+ model can't tell its being used to describe what other people think, and
+ what really matters is the user saying *he* 
+\begin_inset Quotes eld
+\end_inset
+
+enjoyed
+\begin_inset Quotes erd
+\end_inset
+
+ the movie.
+ Therefore, the model classifies this review as negative.
+\end_layout
+
+\begin_layout Part*
+Part 4:
+\end_layout
+
+\begin_layout Section*
+Training Results:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Once again, we trained this network for 10 epochs of the same 30000 reviews
+ each, the results obtained were:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+\begin_inset Graphics
+	filename Training Results/Atten Results/Atten 3.png
+	scale 30
+
+\end_inset
+
+
+\begin_inset Graphics
+	filename Training Results/Atten Results/Atten 4.png
+	scale 30
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Section*
+Capabilities:
+\end_layout
+
+\begin_layout Standard
+We'll give an example of reviews that are 
+\begin_inset Formula $TP,TN,FP,FN$
+\end_inset
+
+ from the last section, and see how they compare this time.
+ 
+\end_layout
+
+\begin_layout Subsection*
+TP: Still Positive
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Review:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+The movie was amazing, stellar production and great acting.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[('the', [0.16578292846679688, 0.20227506756782532]), ('movie', [25.38845443725586,
+ -24.922143936157227]), ('was', [19.82528305053711, -19.46099853515625]), ('amazing
+', [25.427003860473633, -24.959993362426758]), ('stellar', [25.42667579650879,
+ -24.959684371948242]), ('production', [25.31450653076172, -24.859634399414062]),
+ ('and', [4.607140064239502, -6.47935676574707]), ('great', [9.493614196777344,
+ -10.70537281036377]), ('acting', [0.48989158868789673, -1.2680377960205078])]
+ 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Prediction:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[0.9756, 0.0244]
+\end_layout
+
+\begin_layout Subsection*
+TN: Still Negative
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Review:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+This movie is very bad, didn't like it at all.
+ The acting was horrible.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[('this', [5.128819465637207, -3.6058757305145264]), ('movie', [1.1110458374023438,
+ -0.8644526600837708]), ('is', [-15.52978515625, 27.215646743774414]), ('very',
+ [-2.986957311630249, 6.286619663238525]), ('bad', [-15.516898155212402, 27.19142532
+3486328]), ('didn', [-15.492731094360352, 27.131580352783203]), ('like', [-1.080117
+5832748413, 1.5180449485778809]), ('it', [-0.11356291174888611, -0.7606368064880371
+]), ('at', [0.14569979906082153, -0.36768683791160583]), ('all', [0.107904851436614
+99, -1.2996959686279297]), ('the', [0.022366780787706375, -0.7724671959877014]),
+ ('acting', [-3.981590509414673, 3.2712819576263428]), ('was', [-17.051591873168945
+, 26.964542388916016]), ('horrible', [-21.42483139038086, 37.835323333740234])]
+ Total sentiment of review (under softmax):
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Prediction:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[0.1726, 0.8274]
+\end_layout
+
+\begin_layout Subsection*
+FP: Now Negative
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Review:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+The plot, well, its pretty amazing, but the movie, oh boy, its really really
+ bad.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[('the', [-1.7840590476989746, 6.48691987991333]), ('plot', [-2.2400872707366943,
+ 8.047592163085938]), ('well', [-2.2485597133636475, 8.038849830627441]), ('its',
+ [-2.414585828781128, 8.376389503479004]), ('pretty', [24.453876495361328,
+ -24.185083389282227]), ('amazing', [24.453876495361328, -24.185083389282227]),
+ ('but', [0.9936460256576538, -1.9663867950439453]), ('the', [-13.19073486328125,
+ 15.382692337036133]), ('movie', [-13.267112731933594, 15.49260139465332]),
+ ('oh', [-13.296491622924805, 15.534782409667969]), ('boy', [-12.980365753173828,
+ 14.87788200378418]), ('its', [-13.261446952819824, 15.457791328430176]), ('really'
+, [-15.95180892944336, 22.88525390625]), ('really', [-14.002991676330566, 19.3161125
+18310547]), ('bad', [-15.51611614227295, 22.139211654663086])] 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Prediction:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[0.2418, 0.7582]
+\end_layout
+
+\begin_layout Subsection*
+FN: Still Negative
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Review:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Some people thought this movie was horrible, but I enjoyed it very much.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[('some', [4.03014612197876, -4.091564655303955]), ('people', [4.636049270629883,
+ -4.670619010925293]), ('thought', [5.040870666503906, -5.025593280792236]),
+ ('this', [5.897413730621338, -5.753931045532227]), ('movie', [-19.324161529541016,
+ 39.85127258300781]), ('was', [-19.322368621826172, 39.84638595581055]), ('horrible
+', [-19.328044891357422, 39.86263656616211]), ('but', [0.8996272087097168,
+ -2.206287384033203]), ('enjoyed', [-5.622655391693115, 10.65933609008789]),
+ ('it', [10.25531005859375, -11.548738479614258]), ('very', [11.165823936462402,
+ -12.285359382629395]), ('much', [1.95537531375885, -2.5868208408355713])]
+ 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Prediction:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[0.4700, 0.5300]
+\end_layout
+
+\begin_layout Subsection*
+Analysis:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Though we designed this model so that it can also output negative values
+ in the output vector, in the reviews that consist of fully positive or
+ negative words, the output values of the words are still appropriate.
+ For example, the word 
+\begin_inset Quotes eld
+\end_inset
+
+amazing
+\begin_inset Quotes erd
+\end_inset
+
+ in the TP has output [25.427003860473633, -24.959993362426758], and the word
+ 
+\begin_inset Quotes eld
+\end_inset
+
+bad
+\begin_inset Quotes erd
+\end_inset
+
+ in the TN has output [-15.516898155212402, 27.191425323486328].
+ 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+We can see that the FP is now negative.
+ If we look at the last three words of the review, we can see that both
+ the first and second 
+\begin_inset Quotes eld
+\end_inset
+
+really
+\begin_inset Quotes erd
+\end_inset
+
+s take on a negative output vector, therefore adding to the negativeness
+ of the review.
+ This is due to the fact that words are now dependent on their context (albeit
+ that context being only 4 other words), and we can see how their weights
+ changed through the following experiment:
+\end_layout
+
+\begin_layout Section*
+Context Experiment:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+For this experiment, we'll look at the context and output weights of the
+ words in a review 
+\begin_inset Quotes eld
+\end_inset
+
+Really really X
+\begin_inset Quotes erd
+\end_inset
+
+, and see that the outputs of the first four words is dependent on on the
+ word X if it is opinionated, and that the attention weights of all of the
+ words all have a large weight in the word X or one of the other 
+\begin_inset Quotes eld
+\end_inset
+
+really
+\begin_inset Quotes erd
+\end_inset
+
+s.
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+We'll output a list of the following format for each word of the review:
+ (review, output, context weights)
+\end_layout
+
+\begin_layout Subsection*
+\begin_inset Quotes eld
+\end_inset
+
+Really really good
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+List of words:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[('really', [14.16893482208252, -14.648140907287598], [[0.9110495448112488,
+ 0.007625447120517492, 0.026165315881371498, 0.027579842135310173, 0.027579842135310
+173]]), 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+('really', [7.894896984100342, -8.170455932617188], [[0.2453107088804245, 0.43836477
+398872375, 0.0075599998235702515, 0.02904609404504299, 0.2797184884548187]]),
+ 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+('good', [13.367916107177734, -13.852302551269531], [[0.005234839394688606,
+ 0.052872296422719955, 0.7417557239532471, 0.03841515630483627, 0.16172195971012115]
+])] 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Overall sentiment:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[0.9129, 0.0871]
+\end_layout
+
+\begin_layout Subsection*
+\begin_inset Quotes eld
+\end_inset
+
+Really really bad
+\begin_inset Quotes erd
+\end_inset
+
+
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[('really', [-19.547359466552734, 28.038284301757812], [[0.9994186162948608,
+ 4.9844391469378024e-05, 0.00017103180289268494, 0.0001802779734134674, 0.0001802779
+734134674]]), 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+('really', [-19.449817657470703, 27.89032554626465], [[0.002746365964412689,
+ 0.9937122464179993, 8.463772246614099e-05, 0.00032518431544303894, 0.00313157658092
+6776]]), 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+('bad', [-19.554536819458008, 28.049327850341797], [[6.179549473017687e-06,
+ 4.945985710946843e-05, 0.9998296499252319, 3.859821299556643e-05, 7.602422556374222
+e-05]])] 
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+Overall sentiment:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+[0.2068, 0.7932]
+\end_layout
+
+\begin_layout Subsection*
+Analysis:
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+We can see that the words 
+\begin_inset Quotes eld
+\end_inset
+
+really
+\begin_inset Quotes erd
+\end_inset
+
+ in 
+\begin_inset Quotes eld
+\end_inset
+
+Really really good
+\begin_inset Quotes erd
+\end_inset
+
+ have positive (review) output vectors, whereas the words 
+\begin_inset Quotes eld
+\end_inset
+
+really
+\begin_inset Quotes erd
+\end_inset
+
+ in 
+\begin_inset Quotes eld
+\end_inset
+
+Really really bad
+\begin_inset Quotes erd
+\end_inset
+
+ have negative (review) output vectors.
+ We can see that the context weights of the words 
+\begin_inset Quotes eld
+\end_inset
+
+really
+\begin_inset Quotes erd
+\end_inset
+
+ never point to themselves, whereas the context weights of the opinionated
+ word always points to itself.
+\end_layout
+
+\end_body
+\end_document
