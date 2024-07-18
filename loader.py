@@ -78,9 +78,10 @@ def collact_batch(batch):
 # ADD YOUR OWN TEST TEXT #
 ##########################
 
-my_test_texts = []
-my_test_texts.append("i liked it a lot, not that bad")
-my_test_labels = ["positive"]
+my_test_texts = ["Really really bad"]
+my_test_labels = [
+    "negative"
+]
 
 ##########################
 ##########################

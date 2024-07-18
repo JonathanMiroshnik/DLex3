@@ -171,14 +171,6 @@ class ExRestSelfAtten(nn.Module):
 
         output = self.layer3(self.ReLU(self.layer2(context)))
 
-        # print(query.size())
-        # print(keys.transpose(-2, -1).size())
-        # print(attention_scores.size())
-        # print(vals.size())
-        # print(context.size())
-        # print(output.size())
-        # print()
-
         return output, atten_weights
 
 
@@ -211,7 +203,8 @@ class ExMLP(nn.Module):
         return x
 
 def print_review_words_MLP(reviews, reviews_text):
-    model2 = torch.load("MLP.pth")
+    model2 = ExMLP(input_size, output_size, hidden_size)
+    model2.load_state_dict(torch.load("MLP.pth"))
     y = model2(reviews).tolist()
     list = []
     for i in range(len(reviews_text[0])):
@@ -287,8 +280,8 @@ if __name__ == '__main__':
     for labels, reviews, reviews_text in test_dataset:
         print(" ".join(reviews_text[0]))
         print(labels[0])
-        print_review_words_GRU(reviews, reviews_text)
-        print_review_words_RNN(reviews, reviews_text)
+        # print_review_words_MLP(reviews, reviews_text)
+        print_review_words_MLP_Atten(reviews, reviews_text)
         print()
         print()
 

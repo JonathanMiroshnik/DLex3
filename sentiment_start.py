@@ -24,7 +24,7 @@ output_size = 2
 hidden_size = 128        # to experiment with
 
 run_recurrent = True    # else run Token-wise MLP
-use_RNN = True          # otherwise GRU
+use_RNN = False          # otherwise GRU
 atten_size = 0          # atten > 0 means using restricted self atten
 
 reload_model = False
@@ -210,14 +210,6 @@ class ExRestSelfAtten(nn.Module):
         atten_weights = torch.softmax(attention_scores, dim=3)
         context = torch.matmul(atten_weights, vals).squeeze(2)
         output = self.layer3(self.ReLU(self.layer2(context)))
-
-        # print(query.size())
-        # print(keys.transpose(-2, -1).size())
-        # print(attention_scores.size())
-        # print(vals.size())
-        # print(context.size())
-        # print(output.size())
-        # print()
 
         return output, atten_weights
 

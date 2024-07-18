@@ -224,13 +224,6 @@ Training summary:
 \begin_layout Paragraph*
 
 \series medium
-Training the 64-size hidden dimension RNN, the results obtained were (all
- figures averaged out on the epoch):
-\end_layout
-
-\begin_layout Paragraph*
-
-\series medium
 As we can see, in any case, the RNN doesn't really learn at all.
  This may be due to the vanishing/exploding gradient problem of Elmann's
  basic RNN network, as this network is trained on long, 100 words reviews,
@@ -1108,7 +1101,9 @@ s.
 
 \series medium
 We'll output a list of the following format for each word of the review:
- (review, output, context weights)
+ (review, output, context weights), where the array of context weights starts
+ from the word two words to the left, and ends with the word two words to
+ the right, such that the middle entry is the attention of the word to itself.
 \end_layout
 
 \begin_layout Subsection*
@@ -1261,6 +1256,116 @@ really
 
  never point to themselves, whereas the context weights of the opinionated
  word always points to itself.
+\end_layout
+
+\begin_layout Part*
+For reference: 10 randomized reviews and their sentiments
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+reviews = [ "This film was a visual masterpiece that captivated from start
+ to finish.
+ The director's attention to detail in every frame was truly remarkable,
+ creating an immersive experience.
+ The performances were equally impressive, with each actor bringing depth
+ to their characters.
+ The stunning cinematography, coupled with a hauntingly beautiful score,
+ made this a cinematic experience that lingers in your mind long after the
+ credits roll.
+ It is a testament to the power of visual storytelling, leaving audiences
+ mesmerized and inspired.", "The plot was predictable and utterly disappointing.
+ Despite high expectations, the storyline failed to deliver any surprises
+ or depth.
+ The characters were one-dimensional, making it difficult to care about
+ their journey.
+ While there were moments of potential, they were overshadowed by clichés
+ and uninspired writing.
+ The pacing dragged, and the climax fell flat, leaving little impact.
+ Overall, the film lacked originality and failed to engage, making it a
+ forgettable experience that doesn't justify the runtime.", "The acting was
+ superb and brought the story to life.
+ Each actor delivered powerful performances, elevating the material with
+ their emotional depth and authenticity.
+ The chemistry between the leads was palpable, drawing audiences into their
+ world.
+ While the narrative was not groundbreaking, the talent on screen made it
+ engaging and worth watching.
+ The film's success can be attributed to these stellar performances, which
+ kept viewers invested from beginning to end.
+ It is a showcase of acting at its finest.", "I couldn't connect with any
+ of the characters, making it a tedious watch.
+ The film struggled to create meaningful relationships or evoke empathy.
+ The lack of character development left the story feeling hollow and aimless.
+ Despite a promising premise, it never quite hit the emotional beats it
+ aimed for.
+ Scenes felt disjointed and repetitive, leading to a narrative that dragged
+ without direction.
+ Ultimately, it was a missed opportunity that left audiences disengaged
+ and unsatisfied, with little to remember.", "An inspiring tale that leaves
+ you feeling uplifted and hopeful.
+ This film beautifully explores themes of resilience and personal growth,
+ resonating with audiences on a deep level.
+ The protagonist's journey is both relatable and empowering, showcasing
+ the strength of the human spirit.
+ Stunning visuals and a poignant soundtrack complement the narrative, creating
+ an emotionally charged experience.
+ It is a reminder of the power of perseverance and the importance of hope,
+ leaving viewers with a renewed sense of optimism and purpose.", "The soundtrack
+ was memorable, though the film dragged on.
+ While the music added a unique layer to the storytelling, the pacing issues
+ were hard to overlook.
+ The narrative often felt stretched, with scenes that lingered unnecessarily.
+ Despite this, the score provided moments of emotional resonance, elevating
+ certain key scenes.
+ However, it was not enough to fully compensate for the sluggish progression.
+ Ultimately, the film needed tighter editing to maintain engagement throughout,
+ leaving it as an uneven experience.", "A thrilling adventure that keeps
+ you on the edge of your seat.
+ From start to finish, the film delivers non-stop action and suspense.
+ The plot twists are expertly crafted, ensuring that audiences remain captivated.
+ The director's vision is brought to life through impressive set pieces
+ and breathtaking sequences.
+ Characters are well-developed, adding depth to the adrenaline-pumping narrative.
+ This is a film that successfully combines excitement with a compelling
+ story, making it a must-watch for fans of the genre.", "Too many clichés
+ ruined what could have been a great film.
+ The potential for an engaging story was overshadowed by overused tropes
+ and predictable outcomes.
+ The dialogue often felt contrived, lacking authenticity and depth.
+ While there were moments of brilliance, they were few and far between.
+ The lack of originality ultimately hindered the film's impact, leaving
+ it feeling like a missed opportunity.
+ Audiences are left wanting more substance and innovation, disappointed
+ by what could have been exceptional.", "A heartwarming story about friendship
+ that truly touches the soul.
+ The film beautifully captures the essence of genuine connections and the
+ impact they have on our lives.
+ Characters are relatable and well-developed, allowing audiences to form
+ an emotional bond.
+ The narrative is filled with poignant moments that resonate, leaving a
+ lasting impression.
+ It serves as a reminder of the power of kindness and the importance of
+ supporting one another.
+ This film is a celebration of friendship that leaves you moved and inspired.",
+ "The special effects dazzled, but the dialogue was painfully weak.
+ Visually, the film was a spectacle, with groundbreaking effects that set
+ new standards.
+ However, the script failed to match this level of innovation.
+ The dialogue often felt forced, lacking the nuance needed to support the
+ impressive visuals.
+ Despite the technological achievements, the story suffered from poor writing
+ and weak character development.
+ Ultimately, the film's stunning appearance couldn't hide its flaws, resulting
+ in a visually impressive but narratively lacking experience." ]
+\end_layout
+
+\begin_layout Paragraph*
+
+\series medium
+sentiments = [ "positive", "negative", "positive", "negative", "positive",
+ "negative", "positive", "negative", "positive", "negative" ]
 \end_layout
 
 \end_body
